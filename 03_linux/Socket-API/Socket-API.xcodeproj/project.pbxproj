@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1C13D648204E981400750601 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C13D647204E981400750601 /* main.c */; };
 		1C13D64F204E982400750601 /* Server.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C13D64E204E982400750601 /* Server.c */; };
+		1C13D652204EA16F00750601 /* Client.c in Sources */ = {isa = PBXBuildFile; fileRef = 1C13D651204EA16F00750601 /* Client.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +28,7 @@
 		1C13D644204E981400750601 /* Socket-API */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Socket-API"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C13D647204E981400750601 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		1C13D64E204E982400750601 /* Server.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Server.c; sourceTree = "<group>"; };
+		1C13D651204EA16F00750601 /* Client.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Client.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +63,7 @@
 			children = (
 				1C13D647204E981400750601 /* main.c */,
 				1C13D64E204E982400750601 /* Server.c */,
+				1C13D651204EA16F00750601 /* Client.c */,
 			);
 			path = "Socket-API";
 			sourceTree = "<group>";
@@ -122,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C13D652204EA16F00750601 /* Client.c in Sources */,
 				1C13D64F204E982400750601 /* Server.c in Sources */,
 				1C13D648204E981400750601 /* main.c in Sources */,
 			);

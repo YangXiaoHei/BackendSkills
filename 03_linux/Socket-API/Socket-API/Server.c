@@ -60,4 +60,6 @@ int main() {
         close(confd);
     }
     close(sockfd);
+    
+    return 0;
 }

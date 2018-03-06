@@ -35,3 +35,5 @@
 *.xcworkspacedata
 *.xcuserstate
 *.plist
+*.pbxproj
+*.xcuserstate
