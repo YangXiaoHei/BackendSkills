@@ -11,6 +11,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #define SERVER_PORT 8000
 #define MAX_BUF_SIZE   4096
@@ -35,7 +36,8 @@ int main() {
     listen(sockfd, 128);
     
     // accept
-    char ipstr[MAX_BUF_SIZE];
+    char ipstr[128];
+    char buf[MAX_BUF_SIZE];
     while (1) {
         int addrlen = sizeof(clienaddr);
         
@@ -56,6 +58,19 @@ int main() {
         // 打印请求客户端的 IP 地址和 端口号
         printf("client ip : %s  port : %d\n", ipstr, port);
         
+        // 处理客户端提交的数据
+        ssize_t len = read(confd, buf, sizeof(buf));
+        printf("服务器读取到数据长度为 %d\n", len);
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                buf[i] = toupper(buf[i]);
+            }
+            
+            // 将处理后数据返回客户端
+            write(confd, buf, sizeof(buf));
+        }
+        
+    
         // 关闭 socket
         close(confd);
     }
