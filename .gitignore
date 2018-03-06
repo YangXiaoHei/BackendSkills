@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+*.pbxproj
+*.pbxproj
+*.xcworkspacedata
+*.xcuserstate
+*.plist
