@@ -5,15 +5,17 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 #define MSG_TRY_AGAIN "\ntry again\n"
+#define PATH "/dev/tty"
 
 int main() {
     
-    int fd = open("/dev/tty", O_RDWR | O_NONBLOCK);
+    int fd = open(PATH, O_RDWR | O_NONBLOCK);
     
     if (fd < 0) {
-        perror("/dev/tty ");
+        perror(PATH);
         exit(1);
     }
     
@@ -25,11 +27,16 @@ tryagain:
     
     if (len <= 0) {
         
-        write(STDOUT_FILENO, MSG_TRY_AGAIN, strlen(MSG_TRY_AGAIN));
+        if (errno == EAGAIN) {
+            write(STDOUT_FILENO, MSG_TRY_AGAIN, strlen(MSG_TRY_AGAIN));
+            
+            sleep(1);
+            
+            goto tryagain;
+        }
         
-        sleep(1);
-        
-        goto tryagain;
+        perror(PATH);
+        exit(1);
     }
     
     write(STDOUT_FILENO, buf, len);
