@@ -28,7 +28,9 @@ int main(int argc, char *argv[]) {
     }
     if (errno != 0) {
         perror("readdir fail ");
+        closedir(dir);
         exit(1);
     }
+    closedir(dir);
     return 0;
 }
