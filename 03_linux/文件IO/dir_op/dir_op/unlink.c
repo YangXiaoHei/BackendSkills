@@ -16,7 +16,9 @@ int main(int argc, char *argv[]) {
         printf("至少需要 1 个命令行参数\n");
         exit(1);
     }
-    
+    /**
+     *  删除符号链接或者硬链接
+     */
     if (unlink(argv[1]) < 0) {
         perror("unlink fail ");
         exit(1);
