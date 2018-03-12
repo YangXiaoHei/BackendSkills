@@ -47,7 +47,7 @@ int main() {
                    len / 1024);
 
             // 每读 2 个字节就睡 1 秒钟
-            sleep(1);
+            sleep(3);
         }
         
     } else if (pid > 0) {
