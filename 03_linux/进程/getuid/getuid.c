@@ -32,5 +32,7 @@ int main() {
     printf("实际用户 ID : %d\n", getuid());
     printf("有效用户 ID : %d\n", geteuid());
     
+    close(fd);
+    
     return 0;
 }
