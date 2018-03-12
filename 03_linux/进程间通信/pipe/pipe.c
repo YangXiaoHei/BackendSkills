@@ -10,6 +10,11 @@ int main() {
     
     int fds[2];
     
+    /**
+     *  pipe 用于解决有血缘关系的进程间通信
+     
+        一般先 pipe，再 fork
+     */
     if (pipe(fds) < 0) {
         perror("pipe");
         exit(1);
