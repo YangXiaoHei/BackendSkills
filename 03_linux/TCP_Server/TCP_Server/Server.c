@@ -26,6 +26,8 @@ int main() {
     // 创建一个 socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     
+    printf("服务器端 socket fd : %zd\n", sockfd);
+    
     // bind
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -46,6 +48,8 @@ int main() {
                            (struct sockaddr *)&clienaddr,
                            (socklen_t *)&addrlen);
         
+        printf("服务器端 accept 成功后返回的 confd : %zd\n", confd);
+        
         // 将 IP 地址的 numeric 换成 presentation
         inet_ntop(AF_INET,
                   &clienaddr.sin_addr.s_addr,
@@ -56,11 +60,11 @@ int main() {
         int port = ntohs(clienaddr.sin_port);
         
         // 打印请求客户端的 IP 地址和 端口号
-        printf("client ip : %s  port : %d\n", ipstr, port);
+        printf("client ip : %s  port : %zd\n", ipstr, port);
         
         // 处理客户端提交的数据
         ssize_t len = read(confd, buf, sizeof(buf));
-        printf("服务器读取到数据长度为 %d\n", len);
+        printf("服务器读取到数据长度为 %zd\n", len);
         if (len > 0) {
             for (int i = 0; i < len; i++) {
                 buf[i] = toupper(buf[i]);

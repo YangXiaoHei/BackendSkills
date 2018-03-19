@@ -26,10 +26,12 @@ int main(int argc, char *argv[]) {
     // socket
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     
+    printf("客户端 socket fd : %zd\n", sockfd);
+    
     // 要连接的服务器 socket
     struct sockaddr_in servaddr;
     bzero(&servaddr, sizeof(servaddr));
-    char serv_ip_str[] = "10.10.3.34";
+    char serv_ip_str[] = "10.10.3.20";
     servaddr.sin_port = htons(SERVER_PORT);
     servaddr.sin_family = AF_INET;
     inet_pton(AF_INET, serv_ip_str, &servaddr.sin_addr.s_addr);
