@@ -10,17 +10,19 @@
 
 int process_login_pack(chat_pack *pack, chat_user ** login_list) {
     
-    int noti_fds[MAX_USER_NUM];
-    int cnt = 0;
+    printf("执行登陆流程\n");
+    
     int cur = 0;
     int user_fifo_fd;
     
     /* 创建一个私有 fifo */
-    char fifo_path[512];
+    int str_len = strlen(USER_FIFO_PATH) + strlen(pack->src_name) + 1;
+    char *fifo_path = calloc(1, str_len);
     sprintf(fifo_path, "%s/%s", USER_FIFO_PATH, pack->src_name);
+    fifo_path[str_len] = '\0';
+    
     if (access(fifo_path, F_OK) == 0) {
-        printf("用户私有管道 %s 已经被创建\n", USER_FIFO_PATH);
-        return -1;
+        printf("用户私有管道 %s 已经被创建\n", fifo_path);
     } else {
         user_fifo_fd = mkfifo(fifo_path, 0777);
         if (user_fifo_fd < 0) {
@@ -28,7 +30,7 @@ int process_login_pack(chat_pack *pack, chat_user ** login_list) {
             return -1;
         }
     }
-
+    
     /*  向所有人广播  */
     for (int i = 0; i < MAX_USER_NUM; i++) {
         
@@ -85,11 +87,12 @@ int process_data_pack(chat_pack *pack, chat_user ** login_list) {
         if (strcmp(login_list[i]->name, pack->dst_name) == 0) {
             found = 1;
             if (write(login_list[i]->fd, pack->data, pack->data_len) < 0) {
-                char *err = strerror(errno);
-                printf("用户 : %s 向用户 : %s 发送信息 %s 出错\n",
+                const char *err = strerror(errno);
+                printf("用户 : %s 向用户 : %s 发送信息 %s 出错 : %s\n",
                        pack->src_name,
                        pack->dst_name,
-                       pack->data);
+                       pack->data,
+                       err);
                 return -1;
             }
         }
@@ -139,6 +142,7 @@ int main() {
         printf("创建总管道失败\n");
         exit(1);
     }
+    printf("创建总管道成功\n");
     
     // 用于和用户私自通信
     chat_user **login_list = NULL;
@@ -146,35 +150,43 @@ int main() {
         printf("创建登陆列表失败\n");
         exit(1);
     }
+    printf("创建登陆列表成功\n");
     
-    int cur_user_num = 0;
-    
-    int len;
+    ssize_t len;
     char buf[SERV_READ_MAX_LEN];
     
     while (1) {
         
         len = read(serv_fd, buf, sizeof(buf));
-        
+    
         // 读取操作出错
-        if (len < 0 && errno != EAGAIN) {
-            perror("服务器 read");
-            break;
+        if (len < 0) {
+            if (errno != EAGAIN) {
+                perror("服务器 read");
+                break;
+            } else {
+                printf("没有用户向服务器发送数据\n");
+            }
         }
+        printf("读取到 %zd 字节数据\n", len);
         
         // 根据包协议执行不同操作
         int ret = 0;
+        
         switch (((chat_pack *)buf)->pac_pro) {
-            case PACK_LOGIN_TYPE :
+            case PACK_LOGIN_TYPE : {
                 ret = process_login_pack((chat_pack *)buf, login_list);
-            break;
-            case PACK_CHAT_TYPE : 
+            }
+                break;
+            case PACK_CHAT_TYPE : {
                 ret = process_data_pack((chat_pack *)buf, login_list);
+            }
             break;
             default: break;
         }
         
         if (ret != 0) {
+            printf("服务器跳出主循环\n");
             break;
         } else {
             clear_buf(buf);
@@ -187,3 +199,4 @@ int main() {
     
     return 0;
 }
+
