@@ -8,30 +8,44 @@
 #include <fcntl.h>
 #include <errno.h>
 
-int process_login_pack(chat_pack *pack, chat_user ** login_list) {
+/* 创建一个私有 fifo */
+int cre_private_fifo(const char *fname) {
     
-    printf("执行登陆流程\n");
+    int user_fifo_fd = 0;
     
-    int cur = 0;
-    int user_fifo_fd;
-    
-    /* 创建一个私有 fifo */
-    int str_len = strlen(USER_FIFO_PATH) + strlen(pack->src_name) + 1;
+    // 为 fifo 名字分配内存
+    ssize_t str_len = strlen(USER_FIFO_PATH) + strlen("/") + strlen(fname) + 1;
     char *fifo_path = calloc(1, str_len);
-    sprintf(fifo_path, "%s/%s", USER_FIFO_PATH, pack->src_name);
-    fifo_path[str_len] = '\0';
+    sprintf(fifo_path, "%s/%s", USER_FIFO_PATH, fname);
+    fifo_path[str_len - 1] = '\0';
     
+    // 如果 fifo 存在
     if (access(fifo_path, F_OK) == 0) {
         printf("用户私有管道 %s 已经被创建\n", fifo_path);
-    } else {
+    } else { // 如果不存在，创建
         user_fifo_fd = mkfifo(fifo_path, 0777);
-        if (user_fifo_fd < 0) {
+        if (user_fifo_fd < 0) { // 创建失败
             printf("用户私有管道 %s 创建失败\n", USER_FIFO_PATH);
             return -1;
         }
     }
-    
-    /*  向所有人广播  */
+    return 0;
+}
+
+/* 发送给指定 用户 */
+//int send_to_user(const char *src,
+//                 const char *dst,
+//                 char *data,
+//                 short dat_len,
+//                 chat_user **login_list) {
+//
+//
+//
+//
+//}
+
+/* 通知登陆列表中所有人 */
+int notify_all(chat_pack *pack, chat_user ** login_list) {
     for (int i = 0; i < MAX_USER_NUM; i++) {
         
         chat_user *login_user = NULL;
@@ -62,19 +76,61 @@ int process_login_pack(chat_pack *pack, chat_user ** login_list) {
             }
         }
     }
-    
-    /* 创建一个登陆用户并添加到登陆列表中 */
+    return 0;
+}
+
+/* 创建一个用户 */
+chat_user *cre_user(char *name, int fd) {
     chat_user *user = calloc(1, sizeof(chat_user));
     if (user == NULL) {
         printf("user 创建失败\n");
-        return -1;
+        return NULL;
     }
-    memcpy(user->name, pack->src_name, strlen(pack->src_name));
-    user->fd = user_fifo_fd;
+    memcpy(user->name, name, strlen(name));
+    user->fd = fd;
+    return user;
+}
+
+/* 添加一个登陆用户 */
+int add_user_to_login_list(chat_user *user, chat_user **login_list) {
+    int cur = 0;
     while (login_list[cur] != NULL) {
         cur++;
     }
     login_list[cur] = user;
+    return 0;
+}
+
+/* 执行登陆流程 */
+int process_login_pack(chat_pack *pack, chat_user ** login_list) {
+    
+    printf("执行登陆流程\n");
+    
+    /* 创建一个私有 fifo */
+    int user_fifo_fd = cre_private_fifo(pack->src_name);
+    if (user_fifo_fd < 0) {
+        return -1;
+    }
+    printf("%s 与服务器的 fifo 已经创建成功!\n", pack->src_name);
+    
+    /* 创建一个登陆用户 */
+    chat_user *user = cre_user(pack->src_name, user_fifo_fd);
+    if (user == NULL) {
+        return -1;
+    }
+    printf("创建登陆用户 %s 成功!\n", pack->src_name);
+    
+    /*  向所有人广播  */
+    if (notify_all(pack, login_list) < 0) {
+        return -1;
+    }
+    printf("%s 的登陆消息通知了所有人!\n", pack->src_name);
+    
+    /* 将登陆用户添加到登陆列表 */
+    if (add_user_to_login_list(user, login_list) < 0) {
+        return -1;
+    }
+    printf("%s 成功添加到登陆列表中!\n", pack->src_name);
     
     return 0;
 }
@@ -176,12 +232,10 @@ int main() {
         switch (((chat_pack *)buf)->pac_pro) {
             case PACK_LOGIN_TYPE : {
                 ret = process_login_pack((chat_pack *)buf, login_list);
-            }
-                break;
+            } break;
             case PACK_CHAT_TYPE : {
                 ret = process_data_pack((chat_pack *)buf, login_list);
-            }
-            break;
+            } break;
             default: break;
         }
         
@@ -199,4 +253,5 @@ int main() {
     
     return 0;
 }
+
 

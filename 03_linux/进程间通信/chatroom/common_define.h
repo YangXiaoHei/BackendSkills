@@ -1,12 +1,29 @@
 
-#pragma push
-#pragma pack(1)
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+
+//#pragma push
+//#pragma pack(1)
 
 #define MAX_NAME_LEN 255
 #define SERV_FIFO_PATH  "./serv_fifo/serv_fifo"
 #define USER_FIFO_PATH "./user_fifo"
 #define SERV_READ_MAX_LEN (10 << 10)
 #define MAX_USER_NUM  (10)
+
+void sys_err(const char *err, int exitno) {
+    perror(err);
+    exit(exitno);
+}
+
+void usr_err(const char *err, ...) {
+    va_list vg;
+    va_start(vg, err);
+    vprintf(err, vg);
+    va_end(vg);
+    exit(1);
+}
 
 /**
  *  聊天数据包协议
@@ -37,4 +54,5 @@ typedef struct _pack {
     unsigned short data_len;
 } chat_pack;
 
-#pragma pop
+//#pragma pop
+
