@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-int n = 5;
+
 
 int main() {
-    
+    int n = 5;
     while (n) {
         printf("hello\n");
     }

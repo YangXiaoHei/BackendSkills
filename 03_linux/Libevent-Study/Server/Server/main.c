@@ -33,8 +33,6 @@ int main(int argc, char** argv)
     return 0;
 }
 
-
-
 void accept_cb(int fd, short events, void* arg)
 {
     evutil_socket_t sockfd;
@@ -106,7 +104,6 @@ int tcp_server_init(int port, int listen_num)
     
     if(  listen(listener, listen_num) < 0)
         goto error;
-    
     
     //跨平台统一接口，将套接字设置为非阻塞状态
     evutil_make_socket_nonblocking(listener);
