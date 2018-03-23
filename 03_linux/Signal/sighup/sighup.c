@@ -13,6 +13,11 @@ void do_sig(int signo) {
     }
 }
 
+/*
+ *  SIGHUP 当用户退出 shell 时，向所有由 shell 启动的进程发送  SIGHUP 信号
+    默认行为是终止进程
+ */
+
 int main() {
     
     struct sigaction act;
