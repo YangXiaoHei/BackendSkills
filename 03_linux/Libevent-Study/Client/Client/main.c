@@ -12,6 +12,8 @@
 #include <event.h>
 #include <event2/util.h>
 
+
+
 int tcp_connect_server(const char* server_ip, int port);
 
 void cmd_msg_cb(int fd, short events, void* arg);
@@ -22,6 +24,15 @@ void socket_read_cb(int fd, short events, void *arg);
 
 int main(int argc, char** argv)
 {
+    switch () {
+        case haha:
+            xixi
+            break;
+            
+        default:
+            break;
+    }
+    
     /* 创建 socket，连接服务器，并返回 socket 文件描述符 */
     int sockfd = tcp_connect_server(IP, atoi(PORT));
     if( sockfd == -1)
@@ -70,6 +81,8 @@ void cmd_msg_cb(int fd, short events, void* arg)
     
     /* 将终端读到的数据发送给服务器 */
     write(sockfd, msg, ret);
+    
+    1 + 2
 }
 
 
