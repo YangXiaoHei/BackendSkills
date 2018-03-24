@@ -9,6 +9,7 @@ void printtids(const char *arg) {
     pid_t pid = getpid();
     pthread_t tid = pthread_self();
     printf("%s pid : %zd  tid :%zd  (0x%x)\n",arg, pid, tid, (unsigned int)tid);
+    while (1);
 }
 
 void *thr_act(void *arg) {
@@ -25,6 +26,6 @@ int main() {
         exit(1);
     }
     printtids("main thread");
-    sleep(1);
+    while (1);
     return 0;
 }
