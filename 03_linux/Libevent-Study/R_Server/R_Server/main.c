@@ -58,12 +58,17 @@ void listen_cb(evutil_socket_t fd, short events, void *arg) {
     
     struct sockaddr_in cli_add;
     bzero(&cli_add, sizeof(struct sockaddr_in));
+    cli_add.sin_family = AF_INET;
+    
     
     struct event_base *base = (struct event_base *)arg;
     
     int newfd = accept(fd, (struct sockaddr *)&cli_add, sizeof(cli_add));
+    if (newfd < 0) {
+        perror("accpet ");
+    }
     
-    yh_log("accpet a client\n");
+    yh_log("accpet a client -----  %d\n",newfd);
     sleep(1);
     
     struct event *ev_accpet = event_new(base, newfd, EV_PERSIST | EV_READ, read_cb, NULL);

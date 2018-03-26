@@ -217,7 +217,6 @@ void *producer(void *arg) {
     while (1) {
         int t = rand() % 100 + 1;
         q_enqueue(q, t, id);
-        usleep(rand() % 1000000);
         pthread_testcancel();
     }
     return (void *)1;
@@ -230,7 +229,6 @@ void *consumer(void *arg) {
     while (1) {
         int d;
         q_dequeue(q, &d, id);
-        usleep(rand() % 1000000);
         pthread_testcancel();
     }
     return (void *)1;
@@ -272,7 +270,26 @@ int main(int argc, char *argv[]) {
         pthread_create(ps + i, NULL, producer, p);
     }
     
-    sleep(4);
+    sleep(5);
+    
+    sem_unlink(argv[1]);
+    sem_unlink(argv[2]);
+    
+    for (int i = 0; i < 3; i++) {
+        pthread_cancel(cs[i]);
+    }
+    for (int i = 0; i < 10; i++) {
+        pthread_cancel(cs[i]);
+    }
+    
+    for (int i = 0; i < 10; i++) {
+        pthread_join(cs[i], NULL);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_join(ps[i], NULL);
+    }
+    
+    printf("回收完成\n");
     
     return 0;
 }
