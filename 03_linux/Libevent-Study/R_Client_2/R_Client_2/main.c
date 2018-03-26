@@ -16,6 +16,9 @@
 #include <event2/event.h>
 #include <stdlib.h>
 
+#define IP "10.10.3.7"
+#define PORT 8000
+
 void yh_log(const char *format, ...) {
     va_list vg;
     va_start(vg, format);
@@ -60,56 +63,74 @@ int tcp_connect_fd(const char *ip, int port) {
         return -1;
     }
     yh_log("三次握手成功\n");
-    return 0;
+    evutil_make_socket_nonblocking(sockfd);
+    return sockfd;
 }
 
 /**
  *  socket 可读事件监听
  */
 void socket_rd_cb(evutil_socket_t sockfd, short events, void *arg) {
-    
     char buf[1024];
-    bzero(buf, sizeof(buf));
     
-    ssize_t len = read(sockfd, buf, sizeof(buf));
-    if (len < 0) {
-        perror("read from socket fd ");
+    /* 从 socket 中读取来自服务器的数据 */
+    ssize_t len;
+    if ((len = read(sockfd, buf, sizeof(buf))) <= 0) {
+        perror("从 sockfd 读取失败 ");
+        exit(1);
+    }
+    buf[len] = 0;
+    printf("从服务器收到消息 : %s\n", buf);
+}
+
+/**
+ *  监听终端输入事件
+ */
+void cmd_rd_cb(evutil_socket_t fd, short events, void *arg) {
+    char buf[1024];
+    int sockfd = *(int *)arg;
+    
+    /* 从终端读取 */
+    ssize_t len;
+    if ((len = read(fd, buf, sizeof(buf))) <= 0) {
+        perror("从终端读取失败 ");
         exit(1);
     }
     buf[len] = 0;
     
-    printf("recv %s from serv\n", buf);
+    /* 向服务器发送 */
+    printf("向服务器发送消息 : %s", buf);
+    if (write(sockfd, buf, len) < 0) {
+        perror("write ");
+    }
 }
-
-void cmd_rd_cb(evutil_socket_t sockfd, short events, void *arg) {
-    
-    
-    
-}
-
-#define IP "10.10.3.7"
-#define PORT 8000
 
 int main(int argc, const char * argv[]) {
     
-    int sockfd;
-    
     /* 创建 TCP 套接字并向服务器发送 SYN 包 */
+    int sockfd;
     if ((sockfd = tcp_connect_fd(IP, PORT)) < 0) {
         perror("tcp connect fd ");
         exit(1);
     }
     
+    /* Reactor Center */
     struct event_base *base = event_base_new();
     
     /* 监听 socket 可读事件 */
-    struct event *ev_socket = event_new(base, sockfd, EV_READ | EV_PERSIST, socket_rd_cb, NULL);
-    
+    struct event *ev_socket = event_new(base,
+                                        sockfd,
+                                        EV_READ | EV_PERSIST,
+                                        socket_rd_cb,
+                                        NULL);
     event_add(ev_socket, NULL);
     
     /* 监听终端的输入事件 */
-    struct event *ev_input = event_new(base, STDIN_FILENO, EV_READ | EV_PERSIST, cmd_rd_cb, NULL);
-    
+    struct event *ev_input = event_new(base,
+                                       STDIN_FILENO,
+                                       EV_READ | EV_PERSIST,
+                                       cmd_rd_cb,
+                                       (void *)&sockfd);
     event_add(ev_input, NULL);
     
     /* 开启事件循环 */
