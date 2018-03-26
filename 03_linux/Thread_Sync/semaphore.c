@@ -166,7 +166,6 @@ void *producer(void *arg) {
     int id = p->id;
     while (1) {
         sem_wait(empty);
-        printf("生产者 %d 进来\n", id);
         int t = rand() % 100 + 1;
         q_enqueue(q, t);
         printf("生产者 %d 生产蛋糕 %d，并放入队列中，现在队列总共有 %d 个蛋糕\n", id, t, q_size(q));
@@ -182,7 +181,6 @@ void *consumer(void *arg) {
     int id = p->id;
     while (1) {
         sem_wait(exist);
-        printf("消费者 %d 进来\n", id);
         int d;
         q_dequeue(q, &d);
         printf("消费者 %d 吃了蛋糕 %d，队列还剩下 %d 个蛋糕\n", id, d, q_size(q));
@@ -192,14 +190,6 @@ void *consumer(void *arg) {
     return (void *)1;
 }
 
-/**
- *   int sem_init(sem_t *sem,int pshared,unsigned int value);
- int sem_destroy(sem_t *sem);
- int sem_wait(sem_t *sem);
- int sem_trywait(sem_t *sem);
- int sem_post(sem_t *sem);
- int sem_getvalue(sem_t *sem);
- */
 int main() {
     
     int q_capacity = 10;
