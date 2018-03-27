@@ -26,7 +26,7 @@ void net_read_callback(struct bufferevent *bev, void *ctx) {
         printf("buffevent_read 读取失败\n");
         return;
     }
-    printf("from client : %s\n", buf);
+    printf("from client : 【%s】\n", buf);
 }
 
 void net_write_callback(struct bufferevent *bev, void *ctx) {
@@ -64,6 +64,9 @@ void net_event_callback(struct bufferevent *bev, short event, void *ctx) {
 }
 /******************************************************************/
 
+void mysleep(int signo) {
+    sleep(6);
+}
 /*************************** Terminal ************************************/
 void local_read_callback(struct bufferevent *bev, void *ctx) {
     printf("终端 - 读 - 回调\n");
@@ -78,7 +81,11 @@ void local_read_callback(struct bufferevent *bev, void *ctx) {
     if (bufferevent_write(net, buf, len) < 0) {
         printf("向客户端回复数据失败\n");
     }
-    printf("回复 : %s\n", buf);
+    printf("回复 : 【%s】\n", buf);
+    printf("服务器 3 秒钟后开始睡 5 秒钟\n");
+
+    signal(SIGALRM, mysleep);
+    alarm(1);
 }
 
 void local_write_callback(struct bufferevent *bev, void *ctx) {
@@ -154,7 +161,6 @@ void on_accpet(int listener, short event, void *arg) {
     printf("---- on accept -------\n");
     struct sockaddr_in cli;
     bzero(&cli, sizeof(cli));
-    
     struct event_base *base = (struct event_base *)arg;
     unsigned int len = sizeof(struct sockaddr_in);
     int newfd = accept(listener,
@@ -169,6 +175,7 @@ void on_accpet(int listener, short event, void *arg) {
                                               net_event_callback,
                                               NULL);
     bufferevent_base_set(base, net);
+    bufferevent_settimeout(net, 0, 5);
     bufferevent_enable(net, EV_READ | EV_WRITE);
     
     // terminal

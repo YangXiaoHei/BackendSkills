@@ -15,6 +15,12 @@
 #include <event2/event.h>
 #include <unistd.h>
 #include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+int flag = 1;
 
 /*************************** Network ************************************/
 void net_read_callback(struct bufferevent *bev, void *ctx) {
@@ -26,7 +32,7 @@ void net_read_callback(struct bufferevent *bev, void *ctx) {
         printf("buffevent_read 读取失败\n");
         return;
     }
-    printf("from server : %s\n", buf);
+    printf("from server : 【%s】\n", buf);
 }
 
 void net_write_callback(struct bufferevent *bev, void *ctx) {
@@ -78,7 +84,7 @@ void local_read_callback(struct bufferevent *bev, void *ctx) {
     if (bufferevent_write(net, buf, len) < 0) {
         printf("向服务器发数据失败\n");
     }
-    printf("send : %s\n", buf);
+    printf("send : 【%s】\n", buf);
 }
 
 void local_write_callback(struct bufferevent *bev, void *ctx) {
@@ -149,6 +155,7 @@ void establish_connection(const char *ip, short port) {
     bufferevent_socket_connect(net,
                                (struct sockaddr *)&serv,
                                sizeof(struct sockaddr_in));
+    bufferevent_settimeout(net, 0, 3);
     bufferevent_enable(net, EV_READ | EV_WRITE);
     
     // terminal
@@ -170,8 +177,6 @@ void establish_connection(const char *ip, short port) {
 }
 
 int main(int argc, const char * argv[]) {
-    
     establish_connection("10.10.3.7", 8000);
-    
     return 0;
 }
