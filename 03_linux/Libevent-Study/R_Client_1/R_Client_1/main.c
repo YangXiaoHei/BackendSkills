@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #define IP "10.10.3.7"
-#define PORT 8000
+#define PORT 5555
 
 void yh_log(const char *format, ...) {
     va_list vg;
@@ -62,7 +62,7 @@ int tcp_connect_fd(const char *ip, int port) {
         errno = con_err;
         return -1;
     }
-    yh_log("三次握手成功\n");
+    yh_log("TCP 三次握手成功\n");
     evutil_make_socket_nonblocking(sockfd);
     return sockfd;
 }
@@ -80,7 +80,7 @@ void socket_rd_cb(evutil_socket_t sockfd, short events, void *arg) {
         exit(1);
     }
     buf[len] = 0;
-    printf("从服务器收到消息 : %s\n", buf);
+    printf("从服务器收到消息 : %s", buf);
 }
 
 /**
@@ -100,8 +100,10 @@ void cmd_rd_cb(evutil_socket_t fd, short events, void *arg) {
     
     /* 向服务器发送 */
     printf("向服务器发送消息 : %s", buf);
-    if (write(sockfd, buf, len) < 0) {
+    if ((len = write(sockfd, buf, len)) < 0) {
         perror("write ");
+    } else {
+        printf("成功向服务器写入 %s", buf);
     }
 }
 

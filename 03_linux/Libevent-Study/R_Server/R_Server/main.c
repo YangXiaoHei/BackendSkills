@@ -22,9 +22,6 @@ void yh_log(const char *format, ...) {
     va_end(vg);
 }
 
-/**
- *  socket -> bind -> listen -> return fd
- */
 int tcp_connet_fd(int port, int nlisten) {
     evutil_socket_t listenfd;
     if ((listenfd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -38,26 +35,63 @@ int tcp_connet_fd(int port, int nlisten) {
     cli_add.sin_port = htons(port);
     cli_add.sin_addr.s_addr = 0;
     
+    // 设置端口可重用
+    int on = 1;
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0) {
+        perror("setsockopt ");
+        exit(1);
+    }
+    
     // bind
     if (bind(listenfd, (struct sockaddr *)&cli_add, sizeof(struct sockaddr_in)) < 0) {
         perror("bind ");
         exit(1);
     }
-    yh_log("bind success\n");
+    yh_log("bind 成功!\n");
     
     // listen
     if (listen(listenfd, nlisten) < 0) {
         perror("listen ");
         exit(1);
     }
-    yh_log("listen success\n");
+    yh_log("listen 成功!\n");
     return listenfd;
 }
 
 /**
- *  read call back
+ *  终端 读回调
  */
-void buffer_read_cb(struct bufferevent *bev, void *ctx) {
+void local_buffer_read_cb(struct bufferevent *bev, void *ctx) {
+    
+    printf("终端 -读- 回调\n");
+    
+    // 从终端读取输入
+    char buf[1024];
+    size_t rd_len = bufferevent_read(bev, buf, sizeof(buf) - 1);
+    printf("从终端读取到 %zd 字节数据\n", rd_len);
+    buf[rd_len] = '\n';
+    buf[rd_len] = '\0';
+    
+    // 套接字 bufferevent
+    struct bufferevent *net = (struct bufferevent *)ctx;
+    
+    // 向套接字缓冲区写数据
+    if (bufferevent_write(net, buf, rd_len) < 0) {
+        perror("向套接字缓冲区中写数据失败");
+    } else {
+        printf("向套接字缓冲区中写入 %zd 字节数据，内容是 :%s",rd_len, buf);
+    }
+    struct evbuffer *evbuf = bufferevent_get_output(net);
+    size_t evbuflen = evbuffer_get_length(evbuf);
+    printf("套接字发送缓冲区中有 %zd 个字节\n", evbuflen);
+}
+
+/**
+ *  套接字 读回调
+ */
+void net_buffer_read_cb(struct bufferevent *bev, void *ctx) {
+    
+    printf("套接字 -读- 回调\n");
     
     // 获取缓冲区数据长度
     struct evbuffer *input = bufferevent_get_input(bev);
@@ -67,9 +101,9 @@ void buffer_read_cb(struct bufferevent *bev, void *ctx) {
     int sockfd = bufferevent_getfd(bev);
     
     printf("\n------------ 【%d】 --------------\n", sockfd);
-    printf("缓冲区中的数据长度 %zd\n", len);
+    printf("套接字缓冲区中的数据长度 %zd\n", len);
     char buf[1024];
-    size_t rdlen = bufferevent_read(bev, buf, sizeof(buf));
+    size_t rdlen = bufferevent_read(bev, buf, sizeof(buf) - 1);
     printf("服务器读到的数据长度 %zd\n", len);
     buf[rdlen] = 0;
     printf("服务器收到消息 : %s", buf);
@@ -77,55 +111,104 @@ void buffer_read_cb(struct bufferevent *bev, void *ctx) {
 }
 
 /**
- *  write call back
+ *  套接字 写回调
  */
-void buffer_write_cb(struct bufferevent *bev, void *ctx) {
-    printf("bufferevent read cb\n");
+void net_buffer_write_cb(struct bufferevent *bev, void *ctx) {
+
+    printf("套接字 -写- 回调\n");
+    
+    // 获取缓冲区数据长度
+    struct evbuffer *input = bufferevent_get_input(bev);
+    size_t len = evbuffer_get_length(input);
+    printf("套接字缓冲区中的数据长度 %zd\n", len);
 }
 
 /**
- *  event call back
+ *  套接字 异常回调
  */
-void buffer_event_cb(struct bufferevent *bev, short what, void *ctx) {
-    printf("bufferevent read cb\n");
+void net_buffer_event_cb(struct bufferevent *bev, short event, void *ctx) {
+    
+    printf("套接字 -异常- 回调\n");
+    
+    /* 连接完成 */
+    if (event & BEV_EVENT_CONNECTED) {
+        yh_log("连接完成\n");
+        
+        /* 未知错误 */
+    } else if (event & BEV_EVENT_ERROR) {
+        int err = EVUTIL_SOCKET_ERROR();
+        const char *errstr = evutil_socket_error_to_string(err);
+        yh_log("buffer_event_callback 其他错误 -------- %s\n", errstr);
+        
+        /* 写错误 */
+    } else if (event & BEV_EVENT_WRITING) {
+        if (event & BEV_EVENT_TIMEOUT) {
+            yh_log("buffer_event_callback 写异常 | 超时 \n");
+        } else if (event & BEV_EVENT_EOF) {
+            yh_log("buffer_event_callback 写异常 | EOF \n");
+        }
+        
+        /* 读错误 */
+    } else if (event & BEV_EVENT_READING) {
+        if (event & BEV_EVENT_TIMEOUT) {
+            yh_log("buffer_event_callback 读异常 | 超时\n");
+        } else if (event & BEV_EVENT_EOF) {
+            yh_log("buffer_event_callback 读异常 | EOF \n");
+        }
+    }
 }
 
 /**
- *  listen call back
+ *  listen 回调
  */
 void onAccept(evutil_socket_t fd, short events, void *arg) {
-    struct sockaddr_in cli_add;
-    bzero(&cli_add, sizeof(struct sockaddr_in));
     
     struct event_base *base = (struct event_base *)arg;
     
+    struct sockaddr_in cli_add;
+    bzero(&cli_add, sizeof(struct sockaddr_in));
     socklen_t len = sizeof(cli_add);
     int newfd = accept(fd, (struct sockaddr *)&cli_add, &len);
     if (newfd < 0) {
         perror("accpet ");
         exit(1);
     }
-    yh_log("accpet a client -----  %d\n",newfd);
-    struct bufferevent *buffevn = bufferevent_new(newfd,
-                                              buffer_read_cb,
-                                              buffer_write_cb,
-                                              buffer_event_cb,
+    yh_log("TCP 三次握手成功 ----- 新套接字 %d\n",newfd);
+    
+    // 网络数据流
+    struct bufferevent *net = bufferevent_new(newfd,
+                                              net_buffer_read_cb,
+                                              net_buffer_write_cb,
+                                              net_buffer_event_cb,
                                               NULL);
-    bufferevent_base_set(base, buffevn);
-    bufferevent_enable(buffevn, EV_READ | EV_WRITE | EV_PERSIST);
+
+//    struct timeval t = {5, 0};
+    bufferevent_base_set(base, net);
+    bufferevent_enable(net, EV_READ | EV_WRITE);
+   
+    
+    // 标准输入流
+    struct bufferevent *loc = bufferevent_new(STDIN_FILENO,
+                                              local_buffer_read_cb,
+                                              NULL,
+                                              NULL,
+                                              net);
+    bufferevent_base_set(base, loc);
+    bufferevent_enable(loc, EV_READ);
 }
 
 int main(int argc, const char * argv[]) {
-    int listenfd = tcp_connet_fd(8000, 10);
+    
+    // listen fd
+    int listenfd = tcp_connet_fd(5555, 10);
     if (listenfd < 0) {
         perror("tcp connect fd");
         return -1;
     }
-    struct event_base *base = event_base_new();
     
-    /* 监听 listen 事件 */
-    struct event *ev_listen = event_new(base, listenfd, EV_READ | EV_PERSIST, onAccept, base);
-    event_add(ev_listen, NULL);
+    // listen
+    struct event_base *base = event_base_new();
+    event_add(event_new(base, listenfd, EV_READ | EV_PERSIST, onAccept, base), NULL);
     event_base_dispatch(base);
     return 0;
 }

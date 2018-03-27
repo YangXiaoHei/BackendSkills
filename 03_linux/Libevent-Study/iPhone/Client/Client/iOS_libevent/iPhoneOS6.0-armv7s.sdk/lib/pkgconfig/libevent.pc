@@ -1,0 +1,16 @@
+#libevent pkg-config source file
+
+prefix=/Users/JasonTou/work/libevent_patch_for_android/libevent/../built/iPhoneOS6.0-armv7s.sdk
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libevent
+Description: libevent is an asynchronous notification event loop library
+Version: 2.0.20-stable-dev
+Requires:
+Conflicts:
+Libs: -L${libdir} -levent
+Libs.private: 
+Cflags: -I${includedir}
+
