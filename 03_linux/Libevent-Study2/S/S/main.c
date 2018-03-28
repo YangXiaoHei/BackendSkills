@@ -64,9 +64,6 @@ void net_event_callback(struct bufferevent *bev, short event, void *ctx) {
 }
 /******************************************************************/
 
-void mysleep(int signo) {
-    sleep(6);
-}
 /*************************** Terminal ************************************/
 void local_read_callback(struct bufferevent *bev, void *ctx) {
     printf("终端 - 读 - 回调\n");
@@ -82,10 +79,6 @@ void local_read_callback(struct bufferevent *bev, void *ctx) {
         printf("向客户端回复数据失败\n");
     }
     printf("回复 : 【%s】\n", buf);
-    printf("服务器 3 秒钟后开始睡 5 秒钟\n");
-
-    signal(SIGALRM, mysleep);
-    alarm(1);
 }
 
 void local_write_callback(struct bufferevent *bev, void *ctx) {
