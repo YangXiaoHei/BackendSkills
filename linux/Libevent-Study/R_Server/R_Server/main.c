@@ -65,6 +65,21 @@ void local_buffer_read_cb(struct bufferevent *bev, void *ctx) {
     
     printf("终端 -读- 回调\n");
     
+//#ifdef FD_SETSIZE
+//#define    __DARWIN_FD_SETSIZE    FD_SETSIZE
+//#else /* !FD_SETSIZE */
+//#define    __DARWIN_FD_SETSIZE    1024
+//#endif /* FD_SETSIZE */
+//#define    __DARWIN_NBBY        8                /* bits in a byte */
+//#define __DARWIN_NFDBITS    (sizeof(__int32_t) * __DARWIN_NBBY) /* bits per mask */
+//#define    __DARWIN_howmany(x, y)    ((((x) % (y)) == 0) ? ((x) / (y)) : (((x) / (y)) + 1)) /* # y's == x bits? */
+//
+//    __BEGIN_DECLS
+//    typedef    struct fd_set {
+//        __int32_t    fds_bits[__DARWIN_howmany(1024, 32)];
+//    } fd_set;
+//    __END_DECLS
+    
     // 从终端读取输入
     char buf[1024];
     size_t rd_len = bufferevent_read(bev, buf, sizeof(buf) - 1);
@@ -93,9 +108,21 @@ void net_buffer_read_cb(struct bufferevent *bev, void *ctx) {
     
     printf("套接字 -读- 回调\n");
     
+    if (bev->ev_read.ev_events & EV_ET) {
+        printf("ev_events 边缘触发\n");
+    }
+    if (bev->ev_read.ev_res & EV_ET) {
+        printf("ev_res 边缘触发\n");
+    }
+    if (bev->ev_read.ev_flags & EV_ET) {
+        printf("ev_flags 边缘触发\n");
+    }
     // 获取缓冲区数据长度
     struct evbuffer *input = bufferevent_get_input(bev);
     size_t len = evbuffer_get_length(input);
+    
+    printf("%lx\n", bev);
+    printf("%lx\n", *bev);
     
     // 获取 fd
     int sockfd = bufferevent_getfd(bev);
@@ -184,6 +211,7 @@ void onAccept(evutil_socket_t fd, short events, void *arg) {
 
 //    struct timeval t = {5, 0};
     bufferevent_base_set(base, net);
+    bufferevent_setwatermark(net, EV_READ, 0, 2);
     bufferevent_enable(net, EV_READ | EV_WRITE);
    
     
@@ -206,8 +234,11 @@ int main(int argc, const char * argv[]) {
         return -1;
     }
     
+    
+    
     // listen
     struct event_base *base = event_base_new();
+    printf("%s\n", event_base_get_method(base));
     event_add(event_new(base, listenfd, EV_READ | EV_PERSIST, onAccept, base), NULL);
     event_base_dispatch(base);
     return 0;

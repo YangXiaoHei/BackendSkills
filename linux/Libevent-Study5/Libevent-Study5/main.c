@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "SList.h"
 #include "DList.h"
+#include <stdlib.h>
 #include <time.h>
 
 void test1() {
