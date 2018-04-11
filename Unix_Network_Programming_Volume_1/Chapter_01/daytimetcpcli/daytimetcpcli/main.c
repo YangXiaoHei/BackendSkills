@@ -24,9 +24,9 @@ int main(int argc, const char * argv[]) {
     struct sockaddr_in serv;
     bzero(&serv, sizeof(serv));
     serv.sin_family = AF_INET;
-    serv.sin_port = htons(8000);
+    serv.sin_port = htons(9999);
     ;
-    if (inet_aton("10.10.3.33", &serv.sin_addr) < 0) {
+    if (inet_aton("127.0.0.1", &serv.sin_addr) < 0) {
         perror("IP ");
         exit(1);
     }
@@ -36,14 +36,24 @@ int main(int argc, const char * argv[]) {
         exit(1);
     }
     char buf[1024];
-    ssize_t n;
+    ssize_t n = 0;
+    int cnt = 0;
+    ssize_t cur = 0;
     while ((n = read(sockfd, buf, sizeof(buf))) > 0) {
+        
+        cnt++;
+        
         buf[n] = 0;
-        if (fputs(buf, stdout) < 0) {
-            perror("fputs ");
-            exit(1);
-        }
+        printf("第 %d 次循环接收到 : %s\n",cnt, buf);
+        
+        
+//        if (fputs(buf, stdout) < 0) {
+//            perror("fputs ");
+//            exit(1);
+//        }
     }
+    
+    printf("接收循环次数 : %d\n", cnt);
     
     if (n < 0) {
         perror("read");

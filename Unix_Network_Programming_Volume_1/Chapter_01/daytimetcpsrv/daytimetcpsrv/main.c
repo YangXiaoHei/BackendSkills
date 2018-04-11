@@ -26,7 +26,7 @@ int main(int argc, const char * argv[]) {
     bzero(&serv, sizeof(serv));
     serv.sin_addr.s_addr = htons(INADDR_ANY);
     serv.sin_family = AF_INET;
-    serv.sin_port = htons(8000);
+    serv.sin_port = htons(9999);
     
     int on = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,(const void *)&on , sizeof(int)) < 0) {
@@ -49,16 +49,22 @@ int main(int argc, const char * argv[]) {
     
     
     time_t ticks;
+    
     while (1) {
         if ((connfd = accept(sockfd, NULL, NULL)) < 0) {
-                perror("accept ");
-                exit(1);
-            }
-        printf("哈哈\n");
+            perror("accept ");
+            exit(1);
+        }
         
         ticks = time(NULL);
         snprintf(buf, sizeof(buf), "%.24s\r\n", ctime(&ticks));
-        write(connfd, buf, strlen(buf));
+        
+        int cnt = 0;
+        for (int i = 0; i < strlen(buf); i++) {
+            cnt++;
+            write(connfd, buf + i, 1);
+        }
+        printf("发送循环次数 : %d\n", cnt);
     
         close(connfd);
     }
