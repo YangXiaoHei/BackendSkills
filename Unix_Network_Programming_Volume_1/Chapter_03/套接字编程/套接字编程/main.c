@@ -56,6 +56,9 @@ void test() {
     }
 }
 
+/**
+ *  自己写一个 inet_pton
+ */
 int yh_ipv4_pton(const char *ip) {
     
     /* ip 串长度超出值 */
@@ -100,21 +103,45 @@ int yh_ipv4_pton(const char *ip) {
     return ipv4;
 }
 
+/**
+ *  自己写一个 inet_ntop
+ */
+int yh_ipv4_ntop(unsigned ipv4, char *buf, size_t buf_len) {
+    
+    char tmp[INET_ADDRSTRLEN] = { 0 };
+    
+    unsigned char *p = (unsigned char *)&ipv4;
+    snprintf(tmp, sizeof(tmp), "%d.%d.%d.%d", p[0], p[1], p[2], p[3]);
+    
+    /* 调用者分配的内存太小 */
+    if (strlen(tmp) > buf_len) {
+        return -1;
+    }
+    
+    /* 傻逼传了个 NULL 进来 */
+    if (buf == NULL) {
+        return -2;
+    }
+    
+    memcpy(buf, tmp, strlen(tmp));
+    
+    return 1;
+}
+
 void test2() {
     
     const char *ipstr = "172.20.10.3";
     
+    /* 测试自己写的 pton */
     printf("%d\n", inet_addr(ipstr));
     printf("%d\n", yh_ipv4_pton(ipstr));
     
-    
-    
-    
-    
-    
-    
+    /* 测试自己写的 ntop */
+    char buf[INET_ADDRSTRLEN];
+    bzero(buf, sizeof(buf));
+    yh_ipv4_ntop(50992300, buf, sizeof(buf));
+    printf("%s\n", buf);
 }
-
 
 
 int main(int argc, const char * argv[]) {
