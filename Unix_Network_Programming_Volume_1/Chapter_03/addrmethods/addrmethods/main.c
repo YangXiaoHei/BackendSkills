@@ -1,6 +1,6 @@
 //
 //  main.c
-//  套接字编程
+//  addrmethods
 //
 //  Created by YangHan on 2018/4/15.
 //  Copyright © 2018年 YangHan. All rights reserved.
@@ -13,7 +13,7 @@
 
 /**
  *  inet_pton
-    inet_ntop
+ inet_ntop
  */
 void test() {
     
@@ -39,11 +39,11 @@ void test() {
         /**
          *  调用者必须为串分配存储空间
          */
-//        INET_ADDRSTRLEN
-//        INET6_ADDRSTRLEN
+        //        INET_ADDRSTRLEN
+        //        INET6_ADDRSTRLEN
         
         char ipv4[INET_ADDRSTRLEN];
-//        char ipv4[3];
+        //        char ipv4[3];
         struct in_addr addr;
         addr.s_addr = 50992300;
         const char * ret = inet_ntop(AF_INET, &addr, ipv4, sizeof(ipv4));
@@ -91,7 +91,7 @@ int yh_ipv4_pton(const char *ip) {
             nshf += 8;
             cur = 0;
             
-        /* 临时存储字符串 */
+            /* 临时存储字符串 */
         } else {
             buf[cur++] = *p;
         }
