@@ -1,0 +1,20 @@
+#! /bin/bash
+
+if [ -z $1 ]
+then
+    echo "you must input at least one file to complie"
+else
+    declare -a args
+    i=0
+    j=0
+    for arg in $@
+    do
+        [ $i -ne 0 ] && args[$j]=$arg
+        [ $i -ne 0 ] && let j++
+        let i++
+    done
+    
+    output="__$1a8dfasd9f2q3r"
+    gcc -std=c99 $1 -o $output
+    ./$output ${args[@]}
+fi
