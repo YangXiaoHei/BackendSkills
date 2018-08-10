@@ -9,4 +9,9 @@
 - [第 7 章：B 无网不利](https://github.com/YangXiaoHei/Backend_Skills/blob/master/Ch___007.md)
 - [第 8 章：当个好管家](https://github.com/YangXiaoHei/Backend_Skills/blob/master/Ch___008.md)
 
+# 《Linux 命令行与 shell 脚本编程大全》
+
+- [第 1 章：初始 Linux shell]
+- [第 3 章：基本的 bash shell 命令]
+
   
