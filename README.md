@@ -11,9 +11,7 @@
 
 # 《Linux 命令行与 shell 脚本编程大全》
 
-- [第 1 章：初始 Linux shell](https://github.com/YangXiaoHei/Backend_Skills/blob/master/第一章%20初识%20Linux%20shell.xmind)
-- [第 3 章：基本的 bash shell 命令](https://github.com/YangXiaoHei/Backend_Skills/blob/master/第三章%20基本的%20bash%20shell%20命令.xmind)
-- [第 4 章：更多的 bash shell 命令](https://github.com/YangXiaoHei/Backend_Skills/blob/master/第四章%20更多的%20bash%20shell%20命令.xmind)
+// md or pdf TODO
 
 
   
